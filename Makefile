@@ -3,6 +3,14 @@
 
 export LANG=en_US.UTF-8
 
+# This assumes x86_64 Linux (glibc).
+libsqlite_zstd.so:
+	v="v0.3.2"
+	f="sqlite_zstd-$$v-x86_64-unknown-linux-gnu"
+	curl -L \
+	  "https://github.com/phiresky/sqlite-zstd/releases/download/$$v/$$f.tar.gz" \
+	| tar -zxO "$$f/libsqlite_zstd.so" > "$@"
+
 admin.deploy: entries.db.gz
 	@[ "$$SSH_HOST"x != x ] || (echo 'Please specify $$SSH_HOST'; exit 1)
 	rsync entries.db.gz "$$SSH_HOST:/home/kisaragi/deployed/kemdict.db.gz"
@@ -35,7 +43,7 @@ dicts: $(DICT_TARGETS)
 heteronyms.json: $(DICT_TARGETS) process-data.el .cask node_modules
 	cask eval "(load \"process-data\")"
 
-entries.db: heteronyms.json heteronyms-to-sqlite.mjs
+entries.db: heteronyms.json heteronyms-to-sqlite.mjs libsqlite_zstd.so
 	node heteronyms-to-sqlite.mjs
 
 entries.db.gz: entries.db

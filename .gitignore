@@ -1,3 +1,4 @@
+*.so
 .cask
 *.elc
 node_modules
