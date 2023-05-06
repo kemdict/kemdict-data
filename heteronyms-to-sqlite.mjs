@@ -55,6 +55,7 @@ function stringifyFields(thing) {
 db.exec(
   `
 PRAGMA user_version = 2;
+PRAGMA auto_vacuum=full;
 
 CREATE TABLE langs (
   "id" PRIMARY KEY,
@@ -68,6 +69,7 @@ CREATE TABLE dicts (
 );
 
 CREATE TABLE heteronyms (
+  "rowid" INTEGER PRIMARY KEY,
   "title" NOT NULL,
   "from" REFERENCES dicts("id"),
   "pns",
@@ -231,8 +233,10 @@ VALUES
   });
 }
 
-db.exec(
-  `
+{
+  console.log("Creating table 'han'...");
+  db.exec(
+    `
 CREATE TABLE a AS
 SELECT DISTINCT
   title,
@@ -277,4 +281,21 @@ DROP TABLE a;
 DROP TABLE b;
 DROP TABLE c;
 `
-);
+  );
+}
+
+{
+  console.log("Compressing data with sqlite-zstd...");
+  db.loadExtension("./libsqlite_zstd.so");
+  db.exec(`
+SELECT
+zstd_enable_transparent('{
+  "table": "heteronyms",
+  "column": "props",
+  "compression_level": 19,
+  "dict_chooser": "''everything''"
+}');
+SELECT zstd_incremental_maintenance(null, 1);
+VACUUM;
+`);
+}
