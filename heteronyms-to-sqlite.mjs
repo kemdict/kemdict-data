@@ -71,7 +71,7 @@ CREATE TABLE dicts (
 CREATE TABLE heteronyms (
   "rowid" INTEGER PRIMARY KEY,
   "title" NOT NULL,
-  "from" REFERENCES dicts("id"),
+  "dict" REFERENCES dicts("id"),
   "pns",
   "props" NOT NULL
 );
@@ -213,7 +213,7 @@ VALUES
   const heteronyms = JSON.parse(fs.readFileSync("heteronyms.json")).reverse();
   const insertHet = db.prepare(`
 INSERT INTO
-  heteronyms ("title","from","pns","props")
+  heteronyms ("title","dict","pns","props")
 VALUES
   (@title,@from,@pns,@props)`);
   EachPT(heteronyms, "Inserting heteronyms into DB: ", (het) => {
